@@ -1,4 +1,4 @@
-GMM-HMM and TDNN training procedure Repository
+# GMM-HMM and TDNN training procedure Repository
 
 Go through this website https://kaldi-asr.org/doc/kaldi_for_dummies.html for initial understanding of file structure used in kaldi
 
