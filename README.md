@@ -39,7 +39,11 @@ After creating data directory and dictionary directory we can proceed to create 
 
 ## References
 - [https://www.eleanorchodroff.com/tutorial/kaldi/training-acoustic-models.html][eleanor]
+- [http://jrmeyer.github.io/][josh_meyer]
+- [https://desh2608.github.io/blog/][desh_raj]
 
+[josh_meyer]: http://jrmeyer.github.io/
+[desh_raj]: https://desh2608.github.io/blog/
 [eleanor]: https://www.eleanorchodroff.com/tutorial/kaldi/training-acoustic-models.html
 [data_kaldi]: https://kaldi-asr.org/doc/kaldi_for_dummies.html#:~:text=for%20each%20speaker.-,Acoustic%20data,-Now%20you%20have
 [lang_data_kaldi]: https://kaldi-asr.org/doc/kaldi_for_dummies.html#:~:text=and%20so%20on...-,Language%20data,-This%20section%20relates
