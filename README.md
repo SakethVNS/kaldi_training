@@ -6,8 +6,9 @@ In Kaldi all projects are present inside the egs directory from Kaldi root direc
 Ref: https://www.eleanorchodroff.com/tutorial/kaldi/familiarization.html
 
 The explanation used in this is mainly dervied from the references given below. First let's go through the _wsj_ folder structure and then create an example directory of our own.
+## Data Preparation
 
-## WSJ directory structure
+### WSJ directory structure
 In _wsj_ directory we see other directory _s5_(different versions) where actual files reside. <br>
 _utils_,  _steps_ and _local_ directories contain the necessary files for further processing. <br>
 _exp_ directory contain all the model parameters be it GMM or TDNN model. It will have the acoustic model. <br>
@@ -16,7 +17,7 @@ _data_ directory contain all the input data that is needed for training, validat
 In _train_ sub-directory four files are needed to be created fundamentally. _wav.scp_, _text_, _utt2spk_ and _spk2utt_.  Further details of these files can be found in [here][data_kaldi] and [here][eleanor_data]. <br> 
 In _dict_(mentioned here as local/lang ) sub-directory we need files that are mentioned in detail [here][lang_data_kaldi] and [here][eleanor_dict] <br>
 
-## Creating custom directory
+### Creating custom directory
 ![custom_folder](https://user-images.githubusercontent.com/18468722/210492141-4b354189-ddc4-44f1-847b-bcfd16ba3631.png) <br>
 As the directories utils and steps are common to may projects we can simply create a symbolic link as shown [here][eleanor_symlink]
 
@@ -26,15 +27,14 @@ After creating train(and correspondingly validation and test) and dictionary dir
 
 After this we proceed to compute features from the audios. Config files are set as shown [here][eleanor_conf].
 
+At this stage train folder, dictionary folder and pronunciation model have been prepared. In the Hybrid ASR system an HCLG graph is obtained from four components Acoustic Model(H), Context Transducer(C), Pronunciation Model(L) and Language Model(G). All these components are individually obtained and then a decoding graph is constructed. Pronunciation Model(L) is already obtained. Now we will look at Acoustic Model(H) Training.
+## GMM-HMM Training
 
 
 
-Go through this website https://kaldi-asr.org/doc/kaldi_for_dummies.html for initial understanding of file structure used in kaldi
 
-In Kaldi Operations are executed in stage wise manner. Before proceeding to training we have to prepare four files(utt2spk, spk2utt, text, wav.scp). 
-Details of these files are mentioned in the link above
-Next we need dictionary files that contain lexicon, silence and non silence phones
-After creating data directory and dictionary directory we can proceed to create language model using dictionary.
+
+## TDNN Training
 
 
 ## References
