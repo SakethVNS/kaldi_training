@@ -10,12 +10,14 @@ The explanation used in this is mainly dervied from the references given below. 
 
 ### WSJ directory structure
 In _wsj_ directory we see other directory _s5_(different versions) where actual files reside. <br>
-_utils_,  _steps_ and _local_ directories contain the necessary files for further processing. <br>
-_exp_ directory contain all the model parameters be it GMM or TDNN model. It will have the acoustic model. <br>
-_conf_ directory contain config files that indicate any parameters that are to be set like sampling frequency of audios, beam and lattice beam widths etc. <br>
-_data_ directory contain all the input data that is needed for training, validation and testing. In ASR as input we need audios, transcripts, words and their phonetic representation, nonsilence phones, silence phones etc. These files are to be created by the user. <br> Inside _data_ directory we have _train_, _lang_ and _dict_ directories. <br> 
-In _train_ sub-directory four files are needed to be created fundamentally. _wav.scp_, _text_, _utt2spk_ and _spk2utt_.  Further details of these files can be found in [here][data_kaldi] and [here][eleanor_data]. <br> 
-In _dict_(mentioned here as local/lang ) sub-directory we need files that are mentioned in detail [here][lang_data_kaldi] and [here][eleanor_dict] <br>
+* _utils_,  _steps_ and _local_ directories contain the necessary files for further processing. <br>
+* _exp_ directory contain all the model parameters be it GMM or TDNN model. It will have the acoustic model. <br>
+* _conf_ directory contain config files that indicate any parameters that are to be set like sampling frequency of audios, beam and lattice beam widths etc. <br>
+* _data_ directory contain all the input data that is needed for training, validation and testing. In ASR as input we need audios, transcripts, words and their phonetic representation, nonsilence phones, silence phones etc. These files are to be created by the user. <br> 
+
+Inside _data_ directory we have _train_, _lang_ and _dict_ directories. <br> 
+* In _train_ sub-directory four files are needed to be created fundamentally. _wav.scp_, _text_, _utt2spk_ and _spk2utt_.  Further details of these files can be found in [here][data_kaldi] and [here][eleanor_data]. <br> 
+* In _dict_(mentioned here as local/lang ) sub-directory we need files that are mentioned in detail [here][lang_data_kaldi] and [here][eleanor_dict] <br>
 
 ### Creating custom directory
 ![custom_folder](https://user-images.githubusercontent.com/18468722/210492141-4b354189-ddc4-44f1-847b-bcfd16ba3631.png) <br>
