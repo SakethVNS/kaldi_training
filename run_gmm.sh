@@ -4,6 +4,8 @@
 
 . ./cmd.sh 
 [ -f path.sh ] && . ./path.sh
+. read_ini.sh
+read_ini config.ini
 
 #Edit the following parameters according to your requirements before running the script. Decode happens in the backgrund. If you don't have the sufficient computation resources for running decode in background please alter the script accordingly.
 
@@ -12,23 +14,25 @@ dumpdir=/home/saketh/Desktop/ft_dump    #path to store features generated
 audio_dir=/home/shreeharsha/Desktop/IITM_3rd_challenge/English/Audio   #complete path to the folder with all wav audio files, i.e., path to downloaded folder "NPTEL_IITM_English_Challenge/Train_Dev/wav"
 
 # Acoustic model parameters
-data=data   #Path to your data directory, i.e., path to downloaded folder "NPTEL_IITM_English_Challenge/Train_Dev/transcription_dictionaryTrans_and_dict"
-train_set=train_English   #name of the train folder, e.g., "train_NPTEL_IITM"
-dev_set=dev_English   #name of the development set/ validation set, e.g., "dev_IITM", "dev_NPTEL"
-recog_sets="dev_IITM_old"  #decode sets; we decode both dev and eval, e.g., "dev_IITM", "dev_NPTEL"
-tag=jul8     #experiment tag, so that models are not overwritten; make sure change this if running a new experiment.
-expdir=exp_${tag}     
+data=${INI__directory__data_dir}   #Path to your data directory, i.e., path to downloaded folder "NPTEL_IITM_English_Challenge/Train_Dev/transcription_dictionaryTrans_and_dict"
+train_set=${INI__directory__train_dir}   #name of the train folder, e.g., "train_NPTEL_IITM"
+dev_set=${INI__directory__valid_dir}   #name of the development set/ validation set, e.g., "dev_IITM", "dev_NPTEL"
+recog_sets=${INI__directory__test_dir}  #decode sets; we decode both dev and eval, e.g., "dev_IITM", "dev_NPTEL"
+tag=jan9     #experiment tag, so that models are not overwritten; make sure change this if running a new experiment.
+expdir=${INI__directory__expdir}     
+mfcc_config=${INI__mfcc__mfcc_conf}
+lang=${INI__directory_lang_dir}
 
 train_cmd=run.pl
 decode_cmd=run.pl
-decode_nj=16
-train_nj=16
+decode_nj=${INI__general__nj}
+train_nj=${INI__general__nj}
 
 #Set the following flags = 1 to run that particular block of code
-prepare_lang=0
+prepare_lang=1
 mfcc=1
-mono=0
-mfcc_dev=0
+mono=1
+mfcc_dev=1
 tri1=0
 tri2=0
 tri3=0
@@ -56,9 +60,10 @@ echo "         MFCC Feature Extration & CMVN for Training and test set          
 echo ============================================================================
 
 	# Now make MFC features.
+
 	mfccdir=$dumpdir/mfcc_$data
 	for x in $train_set $recog_sets; do 
-		steps/make_mfcc.sh --cmd "$train_cmd" --nj "$train_nj" $data/$x $expdir/make_mfcc/$x $mfccdir/$x || exit 1;
+		steps/make_mfcc.sh --cmd "$train_cmd" --nj "$train_nj" --mfcc-config $mfcc_config $data/$x $expdir/make_mfcc/$x $mfccdir/$x || exit 1;
 	 	steps/compute_cmvn_stats.sh $data/$x $expdir/make_mfcc/$x $mfccdir/$x || exit 1;
 	 	utils/fix_data_dir.sh $data/$x || exit 1;
 	done
@@ -72,7 +77,7 @@ echo ===========================================================================
         # Now make MFC features.
         mfccdir=$dumpdir/mfcc_$data
         for x in $dev_set; do
-                steps/make_mfcc.sh --cmd "$train_cmd" --nj "$train_nj" $data/$x $expdir/make_mfcc/$x $mfccdir/$x || exit 1;
+                steps/make_mfcc.sh --cmd "$train_cmd" --nj "$train_nj" --mfcc-config $mfcc_config $data/$x $expdir/make_mfcc/$x $mfccdir/$x || exit 1;
                 steps/compute_cmvn_stats.sh $data/$x $expdir/make_mfcc/$x $mfccdir/$x || exit 1;
                 utils/fix_data_dir.sh $data/$x || exit 1;
         done
@@ -94,11 +99,13 @@ echo "           tri1 : Deltas + Delta-Deltas Training & Decoding               
 echo ============================================================================
 
 	steps/align_si.sh --boost-silence 1.28 --nj "$train_nj" --cmd "$train_cmd" $data/$train_set $data/lang $expdir/mono $expdir/mono_ali || exit 1;
+    senones=${INI__tri1__senones}
+    gaussians=${INI__tri1__gaussians}
 	
 	# Train tri1, which is deltas + delta-deltas, on train data.
 	# Change senones and gauss values to what you want to try with
-	for sen in 7500; do
-		for gauss in 80; do
+	for sen in $senones; do
+		for gauss in $gaussians; do
 			gauss=$(($sen * $gauss))
 			steps/train_deltas.sh --cmd "$train_cmd" $sen $gauss $data/$train_set $data/lang $expdir/mono_ali $expdir/tri1_${sen}_${gauss} || exit 1;
 	
@@ -125,10 +132,12 @@ echo ===========================================================================
 	#i.e. say tri1_1600_25600 gives the best WER, then use it here.
 	steps/align_si.sh --nj "$train_nj" --cmd "$train_cmd" \
 	$data/$train_set $data/lang $expdir/tri1_7500_600000 $expdir/tri1_ali || exit 1;
-        
+    
+    senones=${INI__tri2__senones}
+    gaussians=${INI__tri2__gaussians}
          # Change senones and gauss values to values you  want to try with 
-	for sen in 7500; do
-		for gauss2 in 80; do
+	for sen in $senones; do
+		for gauss2 in $gaussians; do
 			gauss2=$(($sen * $gauss2))
 			steps/train_lda_mllt.sh --cmd "$train_cmd" \
 			 --splice-opts "--left-context=3 --right-context=3" \
@@ -157,9 +166,11 @@ echo ===========================================================================
 	steps/align_si.sh --nj "$train_nj" --cmd "$train_cmd" \
 	$data/$train_set $data/lang $expdir/tri2_7500_600000 $expdir/tri2_ali || exit 1
 
-         # Change senones and gauss values to what you want to try with
-	for sen in 7500; do
-		for gauss2 in 80; do
+    # Change senones and gauss values to what you want to try with
+    senones=${INI__tri3__senones}
+    gaussians=${INI__tri3__gaussians}
+	for sen in $senones; do
+		for gauss2 in $gaussians; do
 			gauss2=$(($sen * $gauss2))
 			steps/train_sat.sh --cmd "$train_cmd" $sen $gauss2 \
    			$data/$train_set $data/lang $expdir/tri2_ali $expdir/tri3_${sen}_${gauss2} || exit 1;                                           

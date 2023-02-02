@@ -17,6 +17,7 @@ test_sets="dev_IITM dev_NPTEL eval_IITM eval_NPTEL"
 gmm=tri3_7000_140000                 # This specifies a GMM-dir from the features of the type you're training the system on;
                          # it should contain alignments for 'train_set'.
 
+mfcc_config=conf/mfcc.conf
 num_threads_ubm=32
 
 nj_extractor=10
@@ -175,7 +176,7 @@ fi
 if [ $stage -le 7 ]; then
   echo "$0: making MFCC features for low-resolution speed-perturbed data (needed for alignments)"
   steps/make_mfcc.sh --nj $nj \
-    --cmd "$train_cmd" $data_folder/${train_set}_sp
+    --cmd "$train_cmd" --mfcc-config $mfcc_config $data_folder/${train_set}_sp
   steps/compute_cmvn_stats.sh $data_folder/${train_set}_sp
   echo "$0: fixing input data-dir to remove nonexistent features, in case some "
   echo ".. speed-perturbed segments were too short."
