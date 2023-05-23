@@ -5,7 +5,7 @@
 
 . ./cmd.sh
 . ./path.sh
-. ./utils/parse_options.sh
+#. ./utils/parse_options.sh
 . read_ini.sh
 read_ini config.ini
 
@@ -15,13 +15,13 @@ set -e -o pipefail
  
 # First the options that are passed through to run_ivector_common.sh
 # (some of which are also used in this script directly).
-stage=17  #0
+stage=0  #0
 nj=8
-tag=jul8    #experiment tag, so that models are not overwritten; make sure change this if running a new experiment.
+tag=may_14    #experiment tag, so that models are not overwritten; make sure change this if running a new experiment.
 expdir=exp_${tag} 
 datadir=data #Give the absolute path in case your data directory is not present in the current working directory
-train_set=train_English          #Train set Name
-test_sets=dev_English        #"test_dev93 test_eval92"
+train_set=${INI__directory__train_dir}          #Train set Name
+test_sets=${INI__directory__valid_dir}        #"test_dev93 test_eval92"
 #The best TRI3 MODEL
 gmm=tri3_7500_600000  #tri4b # this is the source gmm-dir that we'll use for alignments; it
                             # should have alignments for the specified training data.
@@ -65,7 +65,7 @@ echo "$0 $@"  # Print the command line for logging
 
 #. ./cmd.sh
 #. ./path.sh
-#. ./utils/parse_options.sh
+. ./utils/parse_options.sh
 
 
 if ! cuda-compiled; then
@@ -79,7 +79,6 @@ fi
 local/nnet3/run_ivector_common_IITM.sh \
   --stage $stage --nj $nj \
   --train-set $train_set --gmm $gmm --test-sets $test_sets --data-folder $datadir --exp-folder $expdir \
-  --mfcc-config=$mfcc_conf
   --num-threads-ubm $num_threads_ubm \
   --nj-extractor $nj_extractor \
   --num-processes-extractor $num_processes_extractor \
@@ -104,6 +103,7 @@ tree_dir=$expdir/chain${nnet3_affix}/tree_a_sp
 # If you create such a directory with a non-standard topology
 # you should probably name it differently.
 lang=$datadir/lang_iitm_tdnn
+lang_dir=lang
 
 for f in $train_data_dir/feats.scp $train_ivector_dir/ivector_online.scp \
 	$lores_train_data_dir/feats.scp $gmm_dir/final.mdl \
@@ -117,7 +117,7 @@ if [ $stage -le 12 ]; then
   	# topo file. [note, it really has two states.. the first one is only repeated
   	# once, the second one has zero or more repeats.]
 	if [ -d $lang ]; then
-		if [ $lang/L.fst -nt $datadir/lang/L.fst ]; then
+		if [ $lang/L.fst -nt $datadir/$lang_dir/L.fst ]; then
 	      		echo "$0: $lang already exists, not overwriting it; continuing"
 		    	else
 		      	echo "$0: $lang already exists and seems to be older than $datadir/lang..."
@@ -126,7 +126,7 @@ if [ $stage -le 12 ]; then
 	    	fi
 	 else
         rm -rf $lang
-	 	cp -r $datadir/lang $lang
+	 	cp -r $datadir/$lang_dir $lang
 	    	silphonelist=$(cat $lang/phones/silence.csl) || exit 1;
 	    	nonsilphonelist=$(cat $lang/phones/nonsilence.csl) || exit 1;
 	    	# Use our special topology... note that later on may have to tune this
@@ -139,7 +139,7 @@ if [ $stage -le 13 ]; then
 	# Get the alignments as lattices (gives the chain training more freedom).
   	# use the same num-jobs as the alignments
   	steps/align_fmllr_lats.sh --nj 8 --cmd "$train_cmd" ${lores_train_data_dir} \
-    	$datadir/lang/ $gmm_dir $lat_dir
+    	$datadir/$lang_dir/ $gmm_dir $lat_dir
   	rm $lat_dir/fsts.*.gz # save space
 fi
 #exit 1
@@ -341,7 +341,7 @@ if $test_online_decoding && [ $stage -le 19 ]; then
         	  --cmd "$decode_cmd" data/lang_test_{tgpr,tg} \
         	${datadir}/${data}_hires ${dir}/decode_${data_affix} ${dir}_online/decode_${data_affix} || exit 1
       		steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" \
-        	  ${datadir}/lang  ${datadir}/lang \
+        	  ${datadir}/$lang_dir  ${datadir}/$lang_dir \
        		  ${datadir}/${data}_hires ${dir}/decode_${data_affix} ${dir}_online/decode_${data_affix} || exit 1
     	) || touch ${dir}_online/.error &
   	done
