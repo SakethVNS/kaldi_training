@@ -5,16 +5,20 @@
 set -e
 
 # configs for 'chain'
-stage=0
+
+#define which stage to start executing
+stage=5
 train_stage=-4
 get_egs_stage=-10
 
-exp_fold=exp_feb23
+exp_fold=Hindi_AIS_9
 # adapt_no_sp="marathi_train"
 # adapt=${adapt_no_sp}_sp
-adapt_no_sp_pp="eng_train_dahanu"
-main_adapt="eng_train_dahanu_augment"
-test_sets="eng_valid"
+adapt_no_sp_pp="text_overlap/train_new"
+#training path
+main_adapt="eng_train1"
+#new path created as eng_train containing required data and also provide validation dataset
+test_sets="text_overlap/dev_new"
 ## ASER_RJ_Hindi_test" # "DFS_2019 Nasik_2018 Ooloi_Ahmednagar_2019 DF_Ballaravada_2019"
 dir=$exp_fold/chain/tdnn
 datadir=/home/shreeharsha/Desktop/english_iitm_asr_challenge/NPTEL_IITM_English_Challenge/Train_Dev/transcription_dictionary/Trans_and_dict
@@ -24,10 +28,10 @@ no_augment=0
 
 
 #common_egs_dir=
-lr1_factor=0.005 # learning-rate factor for blocks in the TDNN architecture
-lr2_factor=0.005
-lr3_factor=0.005
-lr4_factor=0.005
+lr1_factor=0.5 # learning-rate factor for blocks in the TDNN architecture
+lr2_factor=0.5
+lr3_factor=0.5
+lr4_factor=0.0
 lr5_factor=0.0
 lr6_factor=0.0
 lr7_factor=0.0
@@ -36,9 +40,9 @@ lr9_factor=0.0
 lr10_factor=0.0
 lr11_factor=0.0
 lr12_factor=0.0
-lr13_factor=0.0
-lr14_factor=0.00625
-lr15_factor=0.00625
+lr13_factor=0.0625
+lr14_factor=0.0625
+lr15_factor=0.0625
 # New model 15 hidden layers and 2 final layers
 #lr16_factor=0.00625
 #lr17_factor=0.00625
@@ -65,7 +69,7 @@ src_ivec_extractor_dir=$exp_fold/nnet3/extractor/  # source ivector extractor di
                                 # new lang dir for transfer learning experiment is prepared
                                 # using source phone set phone.txt and lexicon.txt in src lang dir and
                                 # word.txt target lang dir.
-src_dict=data/local/all_dictionaries/english_dictionary/english_dictionary_one_sil/  # dictionary for source dataset containing lexicon.txt,
+src_dict=data/local/marathi_dictionary_aser  # dictionary for source dataset containing lexicon.txt,
                                             # nonsilence_phones.txt,...
                                             # lexicon.txt used to generate lexicon.txt for
                                             # src-to-tgt transfer.
@@ -91,10 +95,10 @@ EOF
 fi
 
 # dirs for src-to-tgt transfer experiment
-lang_dir=data/lang_eng_wpp/   # lang dir for target data.# In harsha's experiment both lang_dir and src_lang_dir are same with new topo in src_lang_dir
+lang_dir=lang_marathi_AIS_small/   # lang dir for target data.# In harsha's experiment both lang_dir and src_lang_dir are same with new topo in src_lang_dir
 #lang_src_tgt=$datadir/lang_iitm_eng_adapt #data/lang_adapt_${adapt}_test_$test_sets # This dir is prepared using phones.txt and lexicon from
 #lang_src_tgt=$datadir/lang_hindi_adapt
-lang_src_tgt=$datadir/lang_eng_wpp
+lang_src_tgt=$datadir/lang_AIS
 lat_dir=$exp_fold/chain_lats_iitm
 ## Replacing LM files directly, ensure lang_dir is proper ####
 # %%%%%%%%%%%%%%%%%% ^^^^^^^^^^^^^^^ Check the LM used ^^^^^^^^^^^^ ############### Best procedure is to just copy lang_generic/all-stories from asr folder in ../asr/data/
@@ -119,7 +123,7 @@ if [ $stage -le 0 ]; then
    echo "Using lang_dir variable for LM"
    mkdir -p $datadir/${adapt}_valid_nsp
    for file in {utt2spk,spk2utt,text,wav.scp};do cat $datadir/$adapt/$file > $datadir/${adapt}_valid_nsp/$file;done
-   ./utils/fix_data_dir.sh $datadir/${adapt}_valid_nsp
+   ./utils/fix_data_dir.sh $datadir/${adapt}_valid_nsp #creates new  directory with dataset as test_valid_nsp of augmented data
    echo "Using lang_dir variable for LM"
    rm -rf $lang_src_tgt
    mv $lang_dir $lang_src_tgt
@@ -130,7 +134,7 @@ if [ $stage -le 0 ]; then
    #./utils/combine_data.sh $datadir/${adapt}_pp $datadir/${adapt}/ data/marathi_train_downshift_pp/ data/marathi_train_upshift_pp/
    adapt="${adapt}_pp"
 done
-utils/combine_data.sh $datadir/$main_adapt $datadir/eng_train_dahanu_sp_valid_nsp $datadir/wpp_train_set
+utils/combine_data.sh $datadir/$main_adapt $datadir/${adapt_no_sp_pp}_sp_valid_nsp #combining all data into main_adapt variable defined above, data given as arguments
 fi
 adapt=$main_adapt
 if [ $feat_calc -eq 1 ]; then
@@ -253,20 +257,20 @@ if [ $stage -le 7 ]; then
     --trainer.input-model $dir/input.raw \
     --feat.online-ivector-dir "$ivector_dir" \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
-    --chain.xent-regularize 0.000001 \
-    --chain.leaky-hmm-coefficient 0.001 \
-    --chain.l2-regularize 0.000001 \
+    --chain.xent-regularize 0.0001 \
+    --chain.leaky-hmm-coefficient 0.01 \
+    --chain.l2-regularize 0.00001 \
     --chain.apply-deriv-weights false \
     --egs.dir "$common_egs_dir" \
     --egs.opts "--frames-overlap-per-eg 0" \
     --egs.chunk-width 100 \
     --trainer.num-chunk-per-minibatch=64 \
     --trainer.frames-per-iter 1000000 \
-    --trainer.num-epochs 6 \
+    --trainer.num-epochs 2 \
     --trainer.optimization.num-jobs-initial=1 \
     --trainer.optimization.num-jobs-final=1 \
-    --trainer.optimization.initial-effective-lrate=0.00005 \
-    --trainer.optimization.final-effective-lrate=0.000005 \
+    --trainer.optimization.initial-effective-lrate=0.0000005\
+    --trainer.optimization.final-effective-lrate=0.00000005 \
     --trainer.max-param-change 2.0 \
     --cleanup.remove-egs true \
     --feat-dir data/${adapt}_hires \

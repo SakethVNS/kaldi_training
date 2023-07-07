@@ -2,6 +2,22 @@
 s:<NOISE>::g
 s:<SPOKEN_NOISE>::g
 s:<UNK>::g
+s:SIL ::g
+s:MB ::g
+s:BR ::g
+s:WH ::g
+s:FP ::g
+s:ON ::g
+s:IR ::g
+s:HS ::g
+s: SIL::g                                                                                                                                                                                                   
+s: MB::g                                                                                                                                                                                                    
+s: BR::g                                                                                                                                                                                                    
+s: WH::g                                                                                                                                                                                                    
+s: FP::g                                                                                                                                                                                                    
+s: ON::g                                                                                                                                                                                                    
+s: IR::g                                                                                                                                                                                                    
+s: HS::g
 s/://g
 s/\*//g
 s/-HOLDER/HOLDER/g

@@ -10,14 +10,13 @@ set -e -o pipefail
 
 stage=0
 nj=16
-data_folder=data_NPTEL_IITM
-exp_folder=exp_NPTEL_IITM_English280
-train_set=train_NPTEL_200_IITM   # you might set this to e.g. train.
-test_sets="dev_IITM dev_NPTEL eval_IITM eval_NPTEL"
+data_folder=/home/shreeharsha/Desktop/english_iitm_asr_challenge/NPTEL_IITM_English_Challenge/Train_Dev/transcription_dictionary/Trans_and_dict
+exp_folder=exp_eng_baseline_optim
+train_set=train_IITM_warp   # you might set this to e.g. train.
+test_sets="eval_IITM" # dev_NPTEL eval_IITM eval_NPTEL"
 gmm=tri3_7000_140000                 # This specifies a GMM-dir from the features of the type you're training the system on;
                          # it should contain alignments for 'train_set'.
 
-mfcc_config=conf/mfcc.conf
 num_threads_ubm=32
 
 nj_extractor=10
@@ -27,12 +26,10 @@ num_threads_extractor=4
 
 nnet3_affix=             # affix for exp/nnet3 directory to put iVector stuff in (e.g.
                          # in the tedlium recip it's _cleaned).
-
 . ./cmd.sh
 . ./path.sh
 . ./utils/parse_options.sh
-
-
+echo $gmm
 gmm_dir=$exp_folder/${gmm}
 ali_dir=$exp_folder/${gmm}_ali_${train_set}_sp
 
@@ -54,9 +51,7 @@ fi
 
 if [ $stage -le 1 ]; then
   echo "$0: preparing directory for speed-perturbed data"
-  rm -rf $data_folder/${train_set}_sp
-  utils/data/perturb_data_dir_speed_3way.sh --always-include-prefix true $data_folder/${train_set} $data_folder/${train_set}_sp
-  #cp $data_folder/${train_set}/utt2warp $data_folder/${train_set}_sp/ 2>/dev/null
+  utils/data/perturb_data_dir_speed_3way.sh $data_folder/${train_set} $data_folder/${train_set}_sp
 fi
 
 if [ $stage -le 2 ]; then
@@ -72,14 +67,18 @@ if [ $stage -le 2 ]; then
   fi
 
   for datadir in ${train_set}_sp ${test_sets}; do
+#  for datadir in ${test_sets}; do
     utils/copy_data_dir.sh $data_folder/$datadir $data_folder/${datadir}_hires
   done
 
   # do volume-perturbation on the training data prior to extracting hires
   # features; this helps make trained nnets more invariant to test data volume.
   utils/data/perturb_data_dir_volume.sh $data_folder/${train_set}_sp_hires
+  
+  echo "--allow-downsample=true" >> conf/mfcc_hires.conf
 
   for datadir in ${train_set}_sp ${test_sets}; do
+   #for datadir in ${test_sets}; do
     steps/make_mfcc.sh --nj $nj --mfcc-config conf/mfcc_hires.conf \
       --cmd "$train_cmd" $data_folder/${datadir}_hires
     steps/compute_cmvn_stats.sh $data_folder/${datadir}_hires
@@ -176,7 +175,7 @@ fi
 if [ $stage -le 7 ]; then
   echo "$0: making MFCC features for low-resolution speed-perturbed data (needed for alignments)"
   steps/make_mfcc.sh --nj $nj \
-    --cmd "$train_cmd" --mfcc-config $mfcc_config $data_folder/${train_set}_sp
+    --cmd "$train_cmd" $data_folder/${train_set}_sp
   steps/compute_cmvn_stats.sh $data_folder/${train_set}_sp
   echo "$0: fixing input data-dir to remove nonexistent features, in case some "
   echo ".. speed-perturbed segments were too short."

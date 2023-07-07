@@ -10,8 +10,8 @@ read_ini config.ini
 #Edit the following parameters according to your requirements before running the script. Decode happens in the backgrund. If you don't have the sufficient computation resources for running decode in background please alter the script accordingly.
 
 user=username    #user name;   
-dumpdir=/home/saketh/Desktop/ft_dump    #path to store features generated 
-audio_dir=/home/shreeharsha/Desktop/IITM_3rd_challenge/English/Audio   #complete path to the folder with all wav audio files, i.e., path to downloaded folder "NPTEL_IITM_English_Challenge/Train_Dev/wav"
+dumpdir=/home/rahul/ft_dump_1    #path to store features generated 
+audio_dir=/home/rahul/kathbath_marathi/Audio2/   #complete path to the folder with all wav audio files, i.e., path to downloaded folder "NPTEL_IITM_English_Challenge/Train_Dev/wav"
 
 # Acoustic model parameters
 data=${INI__directory__data_dir}   #Path to your data directory, i.e., path to downloaded folder "NPTEL_IITM_English_Challenge/Train_Dev/transcription_dictionaryTrans_and_dict"
@@ -29,13 +29,13 @@ decode_nj=${INI__general__nj}
 train_nj=${INI__general__nj}
 
 #Set the following flags = 1 to run that particular block of code
-prepare_lang=1
-mfcc=1
-mono=1
-mfcc_dev=1
-tri1=0
-tri2=0
-tri3=0
+prepare_lang=0
+mfcc=0
+mono=0
+mfcc_dev=0
+tri1=1
+tri2=1
+tri3=1
 
 if [ $prepare_lang -eq 1 ]; then  
 echo ============================================================================
@@ -98,7 +98,7 @@ echo ===========================================================================
 echo "           tri1 : Deltas + Delta-Deltas Training & Decoding               "
 echo ============================================================================
 
-	steps/align_si.sh --boost-silence 1.28 --nj "$train_nj" --cmd "$train_cmd" $data/$train_set $data/lang $expdir/mono $expdir/mono_ali || exit 1;
+	#steps/align_si.sh --boost-silence 1.28 --nj "$train_nj" --cmd "$train_cmd" $data/$train_set $data/lang $expdir/mono $expdir/mono_ali || exit 1;
     senones=${INI__tri1__senones}
     gaussians=${INI__tri1__gaussians}
 	
@@ -107,11 +107,11 @@ echo ===========================================================================
 	for sen in $senones; do
 		for gauss in $gaussians; do
 			gauss=$(($sen * $gauss))
-			steps/train_deltas.sh --cmd "$train_cmd" $sen $gauss $data/$train_set $data/lang $expdir/mono_ali $expdir/tri1_${sen}_${gauss} || exit 1;
+			#steps/train_deltas.sh --cmd "$train_cmd" $sen $gauss $data/$train_set $data/lang $expdir/mono_ali $expdir/tri1_${sen}_${gauss} || exit 1;
 	
 			#decode happens in the background
 		        
-			utils/mkgraph.sh $data/lang $expdir/tri1_${sen}_${gauss} $expdir/tri1_${sen}_${gauss}/graph || exit 1;
+			#utils/mkgraph.sh $data/lang $expdir/tri1_${sen}_${gauss} $expdir/tri1_${sen}_${gauss}/graph || exit 1;
 			for x in $recog_sets; do
 				steps/decode.sh --nj "$decode_nj" --cmd "$decode_cmd" \
 	        		$expdir/tri1_${sen}_${gauss}/graph $data/$x $expdir/tri1_${sen}_${gauss}/decode_$x || exit 1;
@@ -130,8 +130,8 @@ echo ===========================================================================
 	#Use the best tri1 model to get the tri1 alignments.
 	#obtained for sen=2500, gauss=12
 	#i.e. say tri1_1600_25600 gives the best WER, then use it here.
-	steps/align_si.sh --nj "$train_nj" --cmd "$train_cmd" \
-	$data/$train_set $data/lang $expdir/tri1_7500_600000 $expdir/tri1_ali || exit 1;
+	#steps/align_si.sh --nj "$train_nj" --cmd "$train_cmd" \
+	#$data/$train_set $data/lang $expdir/tri1_7500_600000 $expdir/tri1_ali || exit 1;
     
     senones=${INI__tri2__senones}
     gaussians=${INI__tri2__gaussians}
@@ -139,13 +139,13 @@ echo ===========================================================================
 	for sen in $senones; do
 		for gauss2 in $gaussians; do
 			gauss2=$(($sen * $gauss2))
-			steps/train_lda_mllt.sh --cmd "$train_cmd" \
-			 --splice-opts "--left-context=3 --right-context=3" \
-			$sen $gauss2 $data/$train_set $data/lang $expdir/tri1_ali $expdir/tri2_${sen}_${gauss2} || exit 1;
+			#steps/train_lda_mllt.sh --cmd "$train_cmd" \
+			# --splice-opts "--left-context=3 --right-context=3" \
+			#$sen $gauss2 $data/$train_set $data/lang $expdir/tri1_ali $expdir/tri2_${sen}_${gauss2} || exit 1;
 	
 			#decode happens in the background
 		     	
-			utils/mkgraph.sh $data/lang $expdir/tri2_${sen}_${gauss2} $expdir/tri2_${sen}_${gauss2}/graph || exit 1;
+			#utils/mkgraph.sh $data/lang $expdir/tri2_${sen}_${gauss2} $expdir/tri2_${sen}_${gauss2}/graph || exit 1;
 			for x in $recog_sets; do
 				steps/decode.sh --nj "$decode_nj" --cmd "$decode_cmd" \
 	 			$expdir/tri2_${sen}_${gauss2}/graph $data/$x $expdir/tri2_${sen}_${gauss2}/decode_$x || exit 1;
@@ -163,8 +163,8 @@ echo ===========================================================================
 
 	#Use the best tri2 model to get the tri2 alignments.
 	#i.e. say tri2_1600_25600 gives the best WER, then use it here.
-	steps/align_si.sh --nj "$train_nj" --cmd "$train_cmd" \
-	$data/$train_set $data/lang $expdir/tri2_7500_600000 $expdir/tri2_ali || exit 1
+	#steps/align_si.sh --nj "$train_nj" --cmd "$train_cmd" \
+	#$data/$train_set $data/lang $expdir/tri2_7500_600000 $expdir/tri2_ali || exit 1
 
     # Change senones and gauss values to what you want to try with
     senones=${INI__tri3__senones}
@@ -172,12 +172,12 @@ echo ===========================================================================
 	for sen in $senones; do
 		for gauss2 in $gaussians; do
 			gauss2=$(($sen * $gauss2))
-			steps/train_sat.sh --cmd "$train_cmd" $sen $gauss2 \
-   			$data/$train_set $data/lang $expdir/tri2_ali $expdir/tri3_${sen}_${gauss2} || exit 1;                                           
+			#steps/train_sat.sh --cmd "$train_cmd" $sen $gauss2 \
+   			#$data/$train_set $data/lang $expdir/tri2_ali $expdir/tri3_${sen}_${gauss2} || exit 1;                                           
 
 			#decode happens in the background
 			
-			utils/mkgraph.sh $data/lang $expdir/tri3_${sen}_${gauss2} $expdir/tri3_${sen}_${gauss2}/graph || exit 1;
+			#utils/mkgraph.sh $data/lang $expdir/tri3_${sen}_${gauss2} $expdir/tri3_${sen}_${gauss2}/graph || exit 1;
 		        for x in $recog_sets; do
 				steps/decode_fmllr.sh --nj "$decode_nj" --cmd "$decode_cmd" \
    				$expdir/tri3_${sen}_${gauss2}/graph $data/$x $expdir/tri3_${sen}_${gauss2}/decode_${x} || exit 1;
