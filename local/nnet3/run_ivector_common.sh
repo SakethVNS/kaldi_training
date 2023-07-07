@@ -8,27 +8,27 @@ set -e -o pipefail
 # script.  See those scripts for examples of usage.
 
 
-stage=0
-nj=30
-train_set=train   # you might set this to e.g. train.
-test_sets="dev eval"
+stage=9
+nj=8
+train_set=train_English   # you might set this to e.g. train.
+test_sets="dev_English"
 gmm=tri4b                # This specifies a GMM-dir from the features of the type you're training the system on;
 exp=exp                         # it should contain alignments for 'train_set'.
 data=data
+lang=lang_iitm
+num_threads_ubm=5
 
-num_threads_ubm=32
-
-nj_extractor=10
+nj_extractor=2
 # It runs a JOB with '-pe smp N', where N=$[threads*processes]
-num_processes_extractor=4
-num_threads_extractor=4
+num_processes_extractor=2
+num_threads_extractor=2
 
 nnet3_affix=             # affix for exp/nnet3 directory to put iVector stuff in (e.g.
                          # in the tedlium recip it's _cleaned).
 
-#. ./cmd.sh
-#. ./path.sh
-#. utils/parse_options.sh
+. ./cmd.sh
+. ./path.sh
+. utils/parse_options.sh
 
 
 gmm_dir=${exp}/${gmm}
@@ -188,7 +188,7 @@ if [ $stage -le 8 ]; then
   fi
   echo "$0: aligning with the perturbed low-resolution data"
   steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
-    data/${train_set}_sp data/lang $gmm_dir $ali_dir
+    data/${train_set}_sp data/$lang $gmm_dir $ali_dir
 fi
 
 
